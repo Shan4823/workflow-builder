@@ -41,4 +41,37 @@ app.post('/api/workflows', async (req, res) => {
   }
 });
 
+app.put('/api/workflows/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name } = req.body;
+  if (!name) return res.status(400).send('Name is required');
+  try {
+    const result = await pool.query(
+      'UPDATE workflows SET name = $1 WHERE id = $2 RETURNING *',
+      [name, id]
+    );
+    if (result.rows.length === 0) return res.status(404).send('Workflow not found');
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error updating workflow');
+  }
+});
+
+app.delete('/api/workflows/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      'DELETE FROM workflows WHERE id = $1 RETURNING *',
+      [id]
+    );
+    if (result.rows.length === 0) return res.status(404).send('Workflow not found');
+    res.json({ message: 'Workflow deleted', workflow: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error deleting workflow');
+  }
+});
+
+
 app.listen(5000, () => console.log('Server running on port 5000'));
