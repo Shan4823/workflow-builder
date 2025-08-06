@@ -1,5 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
+import AuthButtons from './components/AuthButtons';
+
 
 function App() {
   return (
@@ -17,6 +19,7 @@ function App() {
         >
           Learn React
         </a>
+         <AuthButtons />
       </header>
     </div>
   );
