@@ -5,23 +5,37 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { Auth0Provider } from '@auth0/auth0-react';
 
-
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
 const domain = "dev-swmpt647q7ufjna7.us.auth0.com";
 const clientId = "EOUHHW8ogpwiL8lB3DjqmEqsFRLVLCvz";
+
+// Optional: add audience if you want to request access tokens for your API
+// const audience = "YOUR_API_IDENTIFIER";
+
+const onRedirectCallback = (appState) => {
+  window.history.replaceState(
+    {},
+    document.title,
+    appState?.returnTo || window.location.pathname
+  );
+};
+
 root.render(
   <React.StrictMode>
     <Auth0Provider
-          domain={domain}
-          clientId={clientId}
-          authorizationParams={{ redirect_uri: window.location.origin }}
-        >
-          <App />
-        </Auth0Provider>
+      domain={domain}
+      clientId={clientId}
+      authorizationParams={{
+        redirect_uri: window.location.origin,
+        // audience // uncomment and set if you have an API to secure
+      }}
+      onRedirectCallback={onRedirectCallback}
+      // optional: cacheLocation="localstorage" // enables persistence across tabs or refreshes
+    >
+      <App />
+    </Auth0Provider>
   </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
