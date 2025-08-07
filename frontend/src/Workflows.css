@@ -220,3 +220,32 @@
     align-items: stretch;
   }
 }
+
+.loading-message {
+  color: #1e40af; /* Blue */
+  font-weight: 600;
+  text-align: center;
+  margin: 20px 0;
+  font-size: 1.1rem;
+}
+
+.error-message {
+  background-color: #fee2e2; /* Light red */
+  color: #b91c1c; /* Dark red */
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 15px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.success-message {
+  background-color: #dcfce7; /* Light green */
+  color: #15803d; /* Dark green */
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 15px;
+  text-align: center;
+  font-weight: 600;
+}
+

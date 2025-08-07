@@ -1,29 +1,26 @@
-// src/Workflows.js
 import React, { useState, useEffect } from "react";
-import "./Workflows.css"; // Ensure this file exists to apply styles
+import "./Workflows.css"; // Import CSS for styling
 import { useAuth0 } from "@auth0/auth0-react";
 
 const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 function Workflows() {
-  // Auth0 hooks
+  // Auth0 hooks for authentication and token retrieval
   const { getAccessTokenSilently, isAuthenticated, loginWithRedirect } = useAuth0();
 
-  // State hooks
+  // States for workflows list, form inputs, loading, errors, submission & editing
   const [workflows, setWorkflows] = useState([]);
   const [newName, setNewName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Editing state
   const [editingWorkflowId, setEditingWorkflowId] = useState(null);
   const [editingName, setEditingName] = useState("");
 
-  // Fetch workflows on component mount or when authenticated
+  // Fetch workflows when the user is authenticated or on component mount
   useEffect(() => {
-    if (!isAuthenticated) return; // Wait until the user logs in
+    if (!isAuthenticated) return; // Don't fetch if not authenticated
 
     async function fetchWorkflows() {
       setLoading(true);
@@ -36,8 +33,11 @@ function Workflows() {
         });
 
         if (!res.ok) throw new Error("Failed to fetch workflows");
+
         const data = await res.json();
-        setWorkflows(data);
+
+        // Expect backend returns { success: true, workflows: [...] }
+        setWorkflows(data.workflows || data);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -48,7 +48,7 @@ function Workflows() {
     fetchWorkflows();
   }, [isAuthenticated, getAccessTokenSilently]);
 
-  // Add new workflow
+  // Handle adding a new workflow
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitError(null);
@@ -72,8 +72,12 @@ function Workflows() {
       });
 
       if (!res.ok) throw new Error("Failed to add workflow");
+
       const newWorkflow = await res.json();
-      setWorkflows((prev) => [...prev, newWorkflow]);
+
+      // Append the new workflow to the state list
+      setWorkflows((prev) => [...prev, newWorkflow.workflow || newWorkflow]);
+
       setNewName("");
     } catch (err) {
       setSubmitError(err.message);
@@ -96,7 +100,7 @@ function Workflows() {
     setSubmitError(null);
   };
 
-  // Submit edited workflow
+  // Submit edits to workflow
   const submitEdit = async (e) => {
     e.preventDefault();
 
@@ -118,9 +122,12 @@ function Workflows() {
       });
 
       if (!res.ok) throw new Error("Failed to update workflow");
+
       const updatedWorkflow = await res.json();
 
-      setWorkflows(workflows.map((w) => (w.id === editingWorkflowId ? updatedWorkflow : w)));
+      // Replace the updated workflow in the state array
+      setWorkflows(workflows.map((w) => (w.id === editingWorkflowId ? updatedWorkflow.workflow || updatedWorkflow : w)));
+
       cancelEdit();
     } catch (err) {
       setSubmitError(err.message);
@@ -142,13 +149,16 @@ function Workflows() {
       });
 
       if (!res.ok) throw new Error("Failed to delete workflow");
+
+      // Remove the deleted workflow from the state list
       setWorkflows(workflows.filter((w) => w.id !== id));
+      setSubmitError(null);
     } catch (err) {
       setSubmitError(err.message);
     }
   };
 
-  // If user not authenticated, show login button
+  // Show login prompt if user is not authenticated
   if (!isAuthenticated) {
     return (
       <div style={{ padding: "20px" }}>
@@ -159,11 +169,13 @@ function Workflows() {
     );
   }
 
-  // Loading and error UI
+  // Show loading indicator while fetching
   if (loading) return <div>Loading workflows...</div>;
+
+  // Show error if failed to fetch workflows
   if (error) return <div style={{ color: "red" }}>Error: {error}</div>;
 
-  // Main render
+  // Main rendering
   return (
     <div className="workflow-container">
       <h2>Workflows</h2>
@@ -181,6 +193,8 @@ function Workflows() {
                     value={editingName}
                     onChange={(e) => setEditingName(e.target.value)}
                     autoFocus
+                    aria-label={`Edit name for ${workflow.name}`}
+                    autoComplete="off"
                   />
                   <button type="submit" className="add-button">
                     Save
@@ -192,7 +206,11 @@ function Workflows() {
               ) : (
                 <>
                   {workflow.name}{" "}
-                  <button className="add-button" onClick={() => startEdit(workflow)}>
+                  <button
+                    className="add-button"
+                    onClick={() => startEdit(workflow)}
+                    aria-label={`Edit workflow ${workflow.name}`}
+                  >
                     Edit
                   </button>
                   <button
@@ -220,7 +238,7 @@ function Workflows() {
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           disabled={isSubmitting}
-          aria-label="Workflow name"
+          aria-label="New workflow name"
           autoComplete="off"
         />
         <button type="submit" className="add-button" disabled={!newName.trim() || isSubmitting}>
@@ -228,6 +246,7 @@ function Workflows() {
         </button>
       </form>
 
+      {/* Display any submission errors */}
       {submitError && (
         <div className="error-message" role="alert" style={{ color: "red", marginTop: "10px" }}>
           Error: {submitError}
